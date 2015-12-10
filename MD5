@@ -1,0 +1,8 @@
+7aaf3157764d2b89377f165756b8c63d *DESCRIPTION
+6aee69ea94ab1192d3329e9fdeb30a7b *NAMESPACE
+712aeda1fbc57a36d65de269a30339cb *R/fsdr.R
+764238ff7456896386a41cba96c28715 *R/maxtest.R
+7afe2a802f448f315daffa84ea5e3daf *man/fsdr.Rd
+abff1e9103a4ba696b4ec695f45942ed *man/fsdr_all.Rd
+fe9b0b9a10d2648d941dea6b8d6b6bd2 *man/maxtest.Rd
+d5e1685f6dc15c61252ad20861263b1a *src/fsdr.c
