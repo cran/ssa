@@ -8,11 +8,11 @@ fsdr(T1, T2, alpha, m1 = 10000, m2 = 10000, p1 = TRUE, p2 = TRUE,
   jitter = NULL)
 }
 \arguments{
-\item{T1, T2}{paired vectors of test statistics, both must be the same length; can be p-values or otherwise; must contain only positive values}
+\item{T1, T2}{paired vectors of test statistics, both must be the same length; can be p-values or otherwise; if not p-values, must be stochastically larger under the null; must contain only positive values}
 
 \item{alpha}{desired false simultaneous discovery rate}
 
-\item{m1, m2}{search only up the m1th (m2th) most significant test statistic in T1 (T2)}
+\item{m1, m2}{search only up the m1th (m2th) most significant test statistic in T1 (T2); NULL to search through all statistics}
 
 \item{p1, p2}{TRUE if T1 (T2) is a vector of p-values}
 

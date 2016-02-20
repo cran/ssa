@@ -2,6 +2,7 @@
 
 export(fsdr)
 export(fsdr_all)
+export(ldd)
 export(maxtest)
 import(stats)
 useDynLib(ssa)

@@ -29,7 +29,7 @@ maxtest <- function(T1,T2){
     stop("Test statistic vectors must be of same length");
   }
   if(sum(c(T1,T2)<0)>0){
-    stop("Test statitics must be positive");
+    stop("Test statistics must be positive");
   }
   if(sum(is.na(T1)||is.na(T2))>0){
     stop("No missing data allowed");

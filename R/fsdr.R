@@ -2,9 +2,9 @@
 #'
 #' Given two sequences of paired test statistics, returns the optimal rectangular rejection that identifies the largest number of simultaneous signals while controlling the false discovery rate.
 #'
-#' @param T1,T2 paired vectors of test statistics, both must be the same length; can be p-values or otherwise; must contain only positive values
+#' @param T1,T2 paired vectors of test statistics, both must be the same length; can be p-values or otherwise; if not p-values, must be stochastically larger under the null; must contain only positive values
 #' @param alpha desired false simultaneous discovery rate
-#' @param m1,m2 search only up the m1th (m2th) most significant test statistic in T1 (T2)
+#' @param m1,m2 search only up the m1th (m2th) most significant test statistic in T1 (T2); NULL to search through all statistics
 #' @param p1,p2 TRUE if T1 (T2) is a vector of p-values
 #' @param jitter NULL if no jittering is desired to resolve ties, otherwise a jitter of \code{runif(0,jitter)} will be added to all entries of T1 and T2
 #'
@@ -46,7 +46,7 @@ fsdr <- function(T1,T2,alpha,m1=10000,m2=10000,p1=TRUE,p2=TRUE,jitter=NULL){
     stop("Test statistic vectors must be of same length");
   }
   if(sum(c(T1,T2)<0)>0){
-    stop("Test statitics must be positive");
+    stop("Test statistics must be positive");
   }
   if(sum(is.na(T1)||is.na(T2))>0){
     stop("No missing data allowed");
@@ -157,7 +157,7 @@ fsdr_all<- function(T1,T2,alpha,m1=5000,m2=5000){
     stop("Test statistic vectors must be of same length");
   }
   if(sum(c(T1,T2)<0)>0){
-    stop("Test statitics must be positive");
+    stop("Test statistics must be positive");
   }
   if(sum(is.na(T1)||is.na(T2))>0){
     stop("No missing data allowed");
