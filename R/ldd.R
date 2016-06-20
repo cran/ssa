@@ -5,7 +5,7 @@
 #' @param T1,T2 paired vectors of test statistics, both must be the same length; can be p-values or otherwise; if not p-values, must be stochastically larger under the null
 #' @param m1,m2 search only up the m1th (m2th) most significant test statistic in T1 (T2); NULL to search through all statistics
 #' @param p1,p2 TRUE if T1 (T2) is a vector of p-values
-#' @param perm the indices of T1 will be randomly permuted \code{perm} times
+#' @param perm the indices of T1 will be randomly permuted \code{perm} times; the permutation p-value will be calculated as a fraction of \code{perm}+1
 #' @param jitter NULL if no jittering is desired to resolve ties, otherwise a jitter of \code{runif(0,jitter)} will be added to all entries of T1 and T2
 #'
 #' @return
@@ -39,82 +39,81 @@
 #' @useDynLib ssa
 #' @export
 
-ldd <- function(T1,T2,m1=1000,m2=1000,perm=0,p1=TRUE,p2=TRUE,jitter=NULL)
-{
-  if(length(T1)!=length(T2)){
-    stop("Test statistic vectors must be of same length");
-  }
-  if(sum(is.na(T1)||is.na(T2))>0){
-    stop("No missing data allowed");
-  }
-  if(sum(c(T1,T2)<0)>0){
-    warning("Test statistics contain negative values");
-  }
-  
-  m <- length(T1);
-  if(is.null(m1)){ m1 <- m; } else { m1 <- min(m,m1); }
-  if(is.null(m2)){ m2 <- m; } else { m2 <- min(m,m2); }
-  m1 <- as.integer(m1); m2 <- as.integer(m2);
-
-  ## deal with ties
-  if(sum(duplicated(T1))>0||sum(duplicated(T2))>0){
-    if(!is.null(jitter)){
-      if(p1){
-        T1 <- 10^-(-log10(T1)+runif(m,0,jitter));
-      } else {
-        T1 <- T1+runif(m,0,jitter);
-      }
-      if(p2){
-        T2 <- 10^-(-log10(T2)+runif(m,0,jitter));
-      } else {
-        T2 <- T2+runif(m,0,jitter);
-      }
-      ## if still tied after jittering
-      if(sum(duplicated(T1))>0||sum(duplicated(T2))>0){
-        warning("Need to increase jitter");
-      }
-    } else {
-      warning("Some test statistics are tied");
+ldd <- function(T1,T2,m1=1000,m2=1000,perm=0,p1=TRUE,p2=TRUE,jitter=NULL){
+    if(length(T1)!=length(T2)){
+        stop("Test statistic vectors must be of same length");
     }
-  }
-  
-  ## the C code is written in terms of empirical CDFs instead of
-  ## empirical survival functions
-  ## if not a p-value, take negatives to make non-null statistics
-  ## stochastically smaller
-  if(!p1){
-    T1 <- -as.numeric(T1);
-  }
-  if(!p2){
-    T2 <- -as.numeric(T2);
-  }
-  
-  ## calculate test statistics statistics
-  Ds <- rep(NA,(perm+1));
-  for(i in 1:(perm+1)){
-    if(i==1){
-      UU <- T1; ## don't permute; this is the real statistic
-    } else {
-      UU <- T1[sample(1:m,m,replace=FALSE)]; ## permute the T1
+    if(sum(is.na(T1)||is.na(T2))>0){
+        stop("No missing data allowed");
     }
-    ord <- sort.list(UU,method="quick",na.last=NA);
-    UU <- UU[ord];
-    VV <- T2[ord];
-    Vord <- sort.list(VV,method="quick",na.last=NA)-1; ## subtract 1 bc C indices start at 0
-    ret <- .Call("ldd",as.numeric(UU),as.integer(Vord),m1,m2);
-    Ds[i] <- ret[1];
-  }
-  Ds <- Ds*sqrt(m);
-  
-  ## permutation p-value
-  if(perm==0){
-    p.perm <- NA;
-  } else {
-    p.perm <- mean(Ds[-1]>Ds[1]);
-  }
-  
-  ## closed-form asymptotic p-value
-  p.asymp <- 1-exp(-(Ds[1]/sqrt(log(m)))^(-2));
-  
-  return(list(D=Ds[1],p.perm=p.perm,p.asymp=p.asymp));
+    if(sum(c(T1,T2)<0)>0){
+        warning("Test statistics contain negative values");
+    }
+    
+    m <- length(T1);
+    if(is.null(m1)){ m1 <- m; } else { m1 <- min(m,m1); }
+    if(is.null(m2)){ m2 <- m; } else { m2 <- min(m,m2); }
+    m1 <- as.integer(m1); m2 <- as.integer(m2);
+    
+    ## deal with ties
+    if(sum(duplicated(T1))>0||sum(duplicated(T2))>0){
+        if(!is.null(jitter)){
+            if(p1){
+                T1 <- 10^-(-log10(T1)+runif(m,0,jitter));
+            } else {
+                T1 <- T1+runif(m,0,jitter);
+            }
+            if(p2){
+                T2 <- 10^-(-log10(T2)+runif(m,0,jitter));
+            } else {
+                T2 <- T2+runif(m,0,jitter);
+            }
+            ## if still tied after jittering
+            if(sum(duplicated(T1))>0||sum(duplicated(T2))>0){
+                warning("Need to increase jitter");
+            }
+        } else {
+            warning("Some test statistics are tied");
+        }
+    }
+    
+    ## the C code is written in terms of empirical CDFs instead of
+    ## empirical survival functions
+    ## if not a p-value, take negatives to make non-null statistics
+    ## stochastically smaller
+    if(!p1){
+        T1 <- -as.numeric(T1);
+    }
+    if(!p2){
+        T2 <- -as.numeric(T2);
+    }
+    
+    ## calculate test statistics
+    Ds <- rep(NA,perm+1);
+    for(i in 1:(perm+1)){
+        if(i==1){
+            UU <- T1; ## don't permute; this is the observed statistic
+        } else {
+            UU <- T1[sample(1:m,m,replace=FALSE)]; ## permute the T1
+        }
+        ord <- sort.list(UU,method="quick",na.last=NA);
+        UU <- UU[ord];
+        VV <- T2[ord];
+        Vord <- sort.list(VV,method="quick",na.last=NA)-1; ## subtract 1 bc C indices start at 0
+        ret <- .Call("ldd",as.numeric(UU),as.integer(Vord),m1,m2);
+        Ds[i] <- ret[1];
+    }
+    Ds <- Ds*sqrt(m);
+    
+    ## permutation p-value
+    if(perm==0){
+        p.perm <- NA;
+    } else {
+        p.perm <- mean(Ds>Ds[1]);
+    }
+    
+    ## closed-form asymptotic p-value
+    p.asymp <- 1-exp(-(Ds[1]/sqrt(log(m)))^(-2));
+    
+    return(list(D=Ds[1],p.perm=p.perm,p.asymp=p.asymp));
 }

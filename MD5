@@ -1,11 +1,11 @@
-2308b75ecf06107c2ed79c771df8c3dd *DESCRIPTION
+920d7009e6a28357aa87b15efb8f41b5 *DESCRIPTION
 2d96cb9c3a96430a9ddc53c4bb0c3273 *NAMESPACE
 d8e01c7c2ed022e5d725a5136540b029 *R/fsdr.R
-b0a48e421df06aca5013fddedf198151 *R/ldd.R
+1a21264bb66545f559f1ce8a96eae455 *R/ldd.R
 c535fa7934a6d3b335f9a5ba6f4e8cf2 *R/maxtest.R
 29d39cb611edacb8871d1a58f047a798 *man/fsdr.Rd
 abff1e9103a4ba696b4ec695f45942ed *man/fsdr_all.Rd
-ab8311df5760f47537fbf802daf43123 *man/ldd.Rd
+c2001ed7e4e907eccd236d90c2900076 *man/ldd.Rd
 fe9b0b9a10d2648d941dea6b8d6b6bd2 *man/maxtest.Rd
 d5e1685f6dc15c61252ad20861263b1a *src/fsdr.c
 232151965ccc13127232c2005c2d3bab *src/ldd.c

@@ -12,7 +12,7 @@ ldd(T1, T2, m1 = 1000, m2 = 1000, perm = 0, p1 = TRUE, p2 = TRUE,
 
 \item{m1, m2}{search only up the m1th (m2th) most significant test statistic in T1 (T2); NULL to search through all statistics}
 
-\item{perm}{the indices of T1 will be randomly permuted \code{perm} times}
+\item{perm}{the indices of T1 will be randomly permuted \code{perm} times; the permutation p-value will be calculated as a fraction of \code{perm}+1}
 
 \item{p1, p2}{TRUE if T1 (T2) is a vector of p-values}
 
