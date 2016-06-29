@@ -109,7 +109,7 @@ ldd <- function(T1,T2,m1=1000,m2=1000,perm=0,p1=TRUE,p2=TRUE,jitter=NULL){
     if(perm==0){
         p.perm <- NA;
     } else {
-        p.perm <- mean(Ds>Ds[1]);
+        p.perm <- mean(Ds>=Ds[1]);
     }
     
     ## closed-form asymptotic p-value
