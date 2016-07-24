@@ -1,8 +1,9 @@
-#' Nonparametric empirical Bayes classifier with latent annotations: chi-square test statistics; training
+#' Nonparametric empirical Bayes classifier using latent annotations: chi-square test statistics; training
 #'
-#' Assumes that chi-square test statistics for each SNP are available from another study. Treats the control and case minor allele frequencies and the chi-square non-centrality parameters as random triples from a bivariate prior distribution G, and estimates the optimal Bayesian classifier given G. Nonparametric maximum likelihood is used as a plug-in estimator for G.
+#' Assumes that chi-square test statistics for each SNP are available from another study. Treats the true control and case minor allele frequencies and the chi-square non-centrality parameters as random triples from a bivariate prior distribution G, and estimates the optimal Bayesian classifier given G. Nonparametric maximum likelihood is used as a plug-in estimator for G.
 #' 
-#' @param X0,X1 n x p matrix of additively coded control and case genotypes, respectively; IMPORTANT: must be coded relative to the same allele in both cases and controls
+#' @param pi0,pi1 p x 1 vectors of control and case minor allele frequencies, respectively; IMPORTANT: must be relative to the same allele in both cases and controls
+#' @param n0,n1 number of controls and number of cases, respectively
 #' @param T p x 1 vector of chi-square test statistics
 #' @param d if a single number, G is estimated on a d x d x d grid; if a three-component vector (d0,d1,dt), G is estimated on a d0 x d1 x dt grid
 #' @param maxit maximum number of EM iterations
@@ -33,7 +34,7 @@
 #' n1 <- 50; ## number of cases
 #' X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 #' T <- rchisq(p,1,lam); ## chi-square statistics
-#' nebula <- nebula.chisq.train(X0,X1,T,d=c(20,25,30));
+#' nebula <- nebula.chisq.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T,d=c(20,25,30));
 #' par(mfrow=c(1,3));
 #' contour(nebula$Pi0,nebula$Pi1,apply(nebula$g,c(1,2),sum));
 #' points(pi0,pi1);
@@ -45,10 +46,13 @@
 #' @import stats
 #' @export
 
-nebula.chisq.train <- function(X0,X1,T,d=25,maxit=200,tol=1e-4,verbose=FALSE){
-    if(sum(complete.cases(X0))!=nrow(X0)||
-       sum(complete.cases(X1))!=nrow(X1)){
+nebula.chisq.train <- function(pi0,pi1,n0,n1,T,d=25,maxit=200,tol=1e-4,verbose=FALSE){
+    if(sum(is.na(pi0))>0||sum(is.na(pi1))>0){
         stop("Missing values in training data.");
+    }
+    ## check for MAF
+    if(min(pi0)==0||min(pi1)==0||max(pi0)==1||max(pi1)==1){
+        stop("At least one SNP has MAF=0.");
     }
     if(sum(is.na(T))>0){
         stop("Missing values in T.");
@@ -60,30 +64,24 @@ nebula.chisq.train <- function(X0,X1,T,d=25,maxit=200,tol=1e-4,verbose=FALSE){
     if(length(d)==0||length(d)>3||length(d)==2){
         stop("d can only have length 1 or 3.");
     }
-    ## check for MAF
-    prs <- prs.train(X0,X1);
-    if(min(prs$pi0)==0||min(prs$pi1)==0){
-        stop("At least one SNP has MAF = 0.");
-    }
     ## grids
     if(length(d)==1){
         d0 <- d; d1 <- d; dt <- d;
     } else {
         d0 <- d[1]; d1 <- d[2]; dt <- d[3];
     }
-    Pi0 <- seq(min(prs$pi0),max(prs$pi0),length=d0);
-    Pi1 <- seq(min(prs$pi1),max(prs$pi1),length=d1);
-    Lam <- seq(0,max(T),length=dt);
+    Pi0 <- seq(min(pi0),max(pi0),length=d0);
+    Pi1 <- seq(min(pi1),max(pi1),length=d1);
+    Lam <- seq(min(T),max(T),length=dt);
     ## calculate density matrices
-    n0 <- nrow(X0); n1 <- nrow(X1);
-    D0 <- outer(prs$pi0*n0*2,Pi0,function(x,y){ dbinom(x,2*n0,y); });
-    D1 <- outer(prs$pi1*n1*2,Pi1,function(x,y){ dbinom(x,2*n1,y); });
+    D0 <- outer(pi0*n0*2,Pi0,function(x,y){ dbinom(x,2*n0,y); });
+    D1 <- outer(pi1*n1*2,Pi1,function(x,y){ dbinom(x,2*n1,y); });
     DT <- outer(T,Lam,function(x,y){ dchisq(x,df=1,ncp=y); });
     g <- tri.npmle(D0,D1,DT,maxit,tol,verbose);
     return(list(D0=D0,D1=D1,DT=DT,Pi0=Pi0,Pi1=Pi1,Lam=Lam,g=g,P=n1/(n1+n0)));
 }
 
-#' Nonparametric empirical Bayes classifier with latent annotations: chi-square test statistics; prediction
+#' Nonparametric empirical Bayes classifier using latent annotations: chi-square test statistics; prediction
 #'
 #' @param newX n x p matrix of additively coded genotypes to be predicted; IMPORTANT: must be coded relative to the same allele as in the cases and controls
 #' @param nebula output of nebula.chisq.train()
@@ -108,7 +106,7 @@ nebula.chisq.train <- function(X0,X1,T,d=25,maxit=200,tol=1e-4,verbose=FALSE){
 #' n1 <- 50; ## number of cases
 #' X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 #' T <- rchisq(p,1,lam); ## chi-square statistics
-#' nebula <- nebula.chisq.train(X0,X1,T,d=c(20,25,30));
+#' nebula <- nebula.chisq.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T,d=c(10,12,14));
 #' ## testing data
 #' newX <- rbind(t(replicate(n0,rbinom(p,2,pi0))),
 #'               t(replicate(n1,rbinom(p,2,pi1))));
@@ -179,11 +177,12 @@ nebula.chisq.predict <- function(newX,nebula,P=NULL,cores=1){
     return(list(ll=ll,score=score,class=class));
 }
 
-#' Nonparametric empirical Bayes classifier with latent annotations: binary indicators; training
+#' Nonparametric empirical Bayes classifier using latent annotations: binary indicators; training
 #'
-#' Assumes that binary indicators for each SNP are available; e.g. indicate whether the SNP is an eQTL. Treats the control and case minor allele frequencies for SNPs with indicators equal to 0 and 1 as random triples from bivariate prior distributions G0 and G1, and estimates the optimal Bayesian classifier given G0 and G1. Nonparametric maximum likelihood is used as a plug-in estimator for G0 and G1.
+#' Assumes that binary indicators for each SNP are available; e.g. indicate whether the SNP is an eQTL. Treats the true control and case minor allele frequencies for SNPs with indicators equal to 0 and 1 as random triples from bivariate prior distributions G0 and G1, and estimates the optimal Bayesian classifier given G0 and G1. Nonparametric maximum likelihood is used as a plug-in estimator for G0 and G1.
 #' 
-#' @param X0,X1 n x p matrix of additively coded control and case genotypes, respectively; IMPORTANT: must be coded relative to the same allele in both cases and controls
+#' @param pi0,pi1 p x 1 vectors of control and case minor allele frequencies, respectively; IMPORTANT: must be relative to the same allele in both cases and controls
+#' @param n0,n1 number of controls and number of cases, respectively
 #' @param I p x 1 vector of binary indicators
 #' @param d if a single number, G0 and G1 are estimated on d x d grids; if a two-component vector (d0,d1), G0 and G1 are estimated on d0 x d1 grids
 #' @param maxit maximum number of EM iterations
@@ -209,7 +208,7 @@ nebula.chisq.predict <- function(newX,nebula,P=NULL,cores=1){
 #' n1 <- 50; ## number of cases
 #' X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 #' T <- rchisq(p,1,lam); ## chi-square statistics
-#' nebula <- nebula.bin.train(X0,X1,I,d=c(20,25));
+#' nebula <- nebula.bin.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,I,d=c(20,25));
 #' par(mfrow=c(1,2));
 #' contour(nebula$neb0$Pi0,nebula$neb0$Pi1,apply(nebula$neb0$g,c(1,2),sum));
 #' points(pi0[I==0],pi1[I==0]);
@@ -219,19 +218,21 @@ nebula.chisq.predict <- function(newX,nebula,P=NULL,cores=1){
 #' @import stats
 #' @export
 
-nebula.bin.train <- function(X0,X1,I,d=25,maxit=200,tol=1e-4,verbose=FALSE){
+nebula.bin.train <- function(pi0,pi1,n0,n1,I,d=25,maxit=200,tol=1e-4,verbose=FALSE){
     if(verbose){
         cat("I==0\n");
     }
-    neb0 <- neb.train(X0[,I==0],X1[,I==0],d=d,maxit=maxit,tol=tol,verbose=verbose);
+    neb0 <- neb.train(pi0[I==0],pi1[I==0],n0,n1,
+                      d=d,maxit=maxit,tol=tol,verbose=verbose);
     if(verbose){
         cat("I==1\n");
     }
-    neb1 <- neb.train(X0[,I==1],X1[,I==1],d=d,maxit=maxit,tol=tol,verbose=verbose);
+    neb1 <- neb.train(pi0[I==1],pi1[I==1],n0,n1,
+                      d=d,maxit=maxit,tol=tol,verbose=verbose);
     return(list(neb0=neb0,neb1=neb1,I=I));
 }
 
-#' Nonparametric empirical Bayes classifier with latent annotations: binary indicators; prediction
+#' Nonparametric empirical Bayes classifier using latent annotations: binary indicators; prediction
 #'
 #' @param newX n x p matrix of additively coded genotypes to be predicted; IMPORTANT: must be coded relative to the same allele as in the cases and controls
 #' @param nebula output of nebula.chisq.train()
@@ -257,7 +258,7 @@ nebula.bin.train <- function(X0,X1,I,d=25,maxit=200,tol=1e-4,verbose=FALSE){
 #' n1 <- 50; ## number of cases
 #' X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 #' T <- rchisq(p,1,lam); ## chi-square statistics
-#' nebula <- nebula.bin.train(X0,X1,I,d=c(20,25));
+#' nebula <- nebula.bin.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,I,d=c(20,25));
 #' ## testing data
 #' newX <- rbind(t(replicate(n0,rbinom(p,2,pi0))),
 #'               t(replicate(n1,rbinom(p,2,pi1))));
@@ -286,11 +287,12 @@ nebula.bin.predict <- function(newX,nebula,P=NULL,cores=1){
     return(list(ll=ll,score=score,class=class));
 }
 
-#' Nonparametric empirical Bayes classifier with latent annotations: chi-square test statistics and binary indicators; training
+#' Nonparametric empirical Bayes classifier using latent annotations: chi-square test statistics and binary indicators; training
 #'
-#' Assumes that chi-square test statistics for each SNP are available from another study, and binary indicators for each SNP are available as well. Treats the control and case minor allele frequencies and the chi-square non-centrality parameters as random triples from a bivariate prior distribution G0 for SNPs with indicators 0, and from G1 for SNPs with indicators equal to 1. Estimates the optimal Bayesian classifier given G. Nonparametric maximum likelihood is used as a plug-in estimator for G.
+#' Assumes that chi-square test statistics for each SNP are available from another study, and binary indicators for each SNP are available as well. Treats the true control and case minor allele frequencies and the chi-square non-centrality parameters as random triples from a bivariate prior distribution G0 for SNPs with indicators 0, and from G1 for SNPs with indicators equal to 1. Estimates the optimal Bayesian classifier given G. Nonparametric maximum likelihood is used as a plug-in estimator for G.
 #' 
-#' @param X0,X1 n x p matrix of additively coded control and case genotypes, respectively; IMPORTANT: must be coded relative to the same allele in both cases and controls
+#' @param pi0,pi1 p x 1 vectors of control and case minor allele frequencies, respectively; IMPORTANT: must be relative to the same allele in both cases and controls
+#' @param n0,n1 number of controls and number of cases, respectively
 #' @param T p x 1 vector of chi-square test statistics
 #' @param I p x 1 vector of binary indicators
 #' @param d if a single number, G0 and G1 are estimated on d x d x d grids; if a three-component vector (d0,d1,dt), G0 and G1 are estimated on d0 x d1 x dt grids
@@ -317,7 +319,7 @@ nebula.bin.predict <- function(newX,nebula,P=NULL,cores=1){
 #' n1 <- 50; ## number of cases
 #' X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 #' T <- rchisq(p,1,lam); ## chi-square statistics
-#' nebula <- nebula.chisq.bin.train(X0,X1,T,I,d=c(10,15,20));
+#' nebula <- nebula.chisq.bin.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T,I,d=c(10,15,20));
 #' par(mfrow=c(2,3));
 #' contour(nebula$nebula0$Pi0,nebula$nebula0$Pi1,apply(nebula$nebula0$g,c(1,2),sum));
 #' points(pi0[I==0],pi1[I==0]);
@@ -335,21 +337,21 @@ nebula.bin.predict <- function(newX,nebula,P=NULL,cores=1){
 #' @import stats
 #' @export
 
-nebula.chisq.bin.train <- function(X0,X1,T,I,d=25,maxit=200,tol=1e-4,verbose=FALSE){
+nebula.chisq.bin.train <- function(pi0,pi1,n0,n1,T,I,d=25,maxit=200,tol=1e-4,verbose=FALSE){
     if(verbose){
         cat("I==0\n");
     }
-    nebula0 <- nebula.chisq.train(X0[,I==0],X1[,I==0],T[I==0],
+    nebula0 <- nebula.chisq.train(pi0[I==0],pi1[I==0],n0,n1,T[I==0],
                                   d=d,maxit=maxit,tol=tol,verbose=verbose);
     if(verbose){
         cat("I==1\n");
     }
-    nebula1 <- nebula.chisq.train(X0[,I==1],X1[,I==1],T[I==1],
+    nebula1 <- nebula.chisq.train(pi0[I==1],pi1[I==1],n0,n1,T[I==1],
                                   d=d,maxit=maxit,tol=tol,verbose=verbose);
     return(list(nebula0=nebula0,nebula1=nebula1,I=I));
 }
 
-#' Nonparametric empirical Bayes classifier with latent annotations: chi-square test statistics and binary indicators; prediction
+#' Nonparametric empirical Bayes classifier using latent annotations: chi-square test statistics and binary indicators; prediction
 #'
 #' @param newX n x p matrix of additively coded genotypes to be predicted; IMPORTANT: must be coded relative to the same allele as in the cases and controls
 #' @param nebula output of nebula.chisq.train()
@@ -374,7 +376,7 @@ nebula.chisq.bin.train <- function(X0,X1,T,I,d=25,maxit=200,tol=1e-4,verbose=FAL
 #' n1 <- 50; ## number of cases
 #' X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 #' T <- rchisq(p,1,lam); ## chi-square statistics
-#' nebula <- nebula.chisq.bin.train(X0,X1,T,I,d=c(10,15,20));
+#' nebula <- nebula.chisq.bin.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T,I,d=c(10,12,14));
 #' ## testing data
 #' newX <- rbind(t(replicate(n0,rbinom(p,2,pi0))),
 #'               t(replicate(n1,rbinom(p,2,pi1))));
@@ -408,9 +410,10 @@ nebula.chisq.bin.predict <- function(newX,nebula,P=NULL,cores=1){
     return(list(ll=ll,score=score,class=class));
 }
 
-#' Nonparametric empirical Bayes classifier with latent annotations: wrapper function; training
+#' Nonparametric empirical Bayes classifier using latent annotations: wrapper function; training
 #'
-#' @param X0,X1 n x p matrix of additively coded control and case genotypes, respectively; IMPORTANT: must be coded relative to the same allele in both cases and controls
+#' @param pi0,pi1 p x 1 vectors of control and case minor allele frequencies, respectively; IMPORTANT: must be relative to the same allele in both cases and controls
+#' @param n0,n1 number of controls and number of cases, respectively
 #' @param T p x 1 vector of chi-square test statistics
 #' @param I p x 1 vector of binary indicators
 #' @param d if a single number, G0 and G1 are estimated on d x d x d grids; if a three-component vector (d0,d1,dt), G0 and G1 are estimated on d0 x d1 x dt grids
@@ -436,31 +439,31 @@ nebula.chisq.bin.predict <- function(newX,nebula,P=NULL,cores=1){
 #' n1 <- 50; ## number of cases
 #' X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 #' T <- rchisq(p,1,lam); ## chi-square statistics
-#' nebula1 <- nebula.train(X0,X1,d=c(10,15));
-#' nebula2 <- nebula.train(X0,X1,T=T,d=c(10,15,20));
-#' nebula3 <- nebula.train(X0,X1,I=I,d=c(10,15));
-#' nebula4 <- nebula.train(X0,X1,T=T,I=I,d=c(10,15,20));
+#' nebula1 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,d=c(10,15));
+#' nebula2 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T=T,d=c(10,15,20));
+#' nebula3 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,I=I,d=c(10,15));
+#' nebula4 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T=T,I=I,d=c(10,15,20));
 #'
 #' @import stats
 #' @export
 
-nebula.train <- function(X0,X1,T=NULL,I=NULL,d=25,maxit=200,tol=1e-4,verbose=FALSE){
+nebula.train <- function(pi0,pi1,n0,n1,T=NULL,I=NULL,d=25,maxit=200,tol=1e-4,verbose=FALSE){
     if(is.null(T[1])&&is.null(I[1])){
         return(list(type=1,
-                    nebula=neb.train(X0,X1,d,maxit,tol,verbose)));
+                    nebula=neb.train(pi0,pi1,n0,n1,d,maxit,tol,verbose)));
     } else if(!is.null(T[1])&&is.null(I[1])){
         return(list(type=2,
-                    nebula=nebula.chisq.train(X0,X1,T,d,maxit,tol,verbose)));
+                    nebula=nebula.chisq.train(pi0,pi1,n0,n1,T,d,maxit,tol,verbose)));
     } else if(is.null(T[1])&&!is.null(I[1])){
         return(list(type=3,
-                    nebula=nebula.bin.train(X0,X1,I,d,maxit,tol,verbose)));
+                    nebula=nebula.bin.train(pi0,pi1,n0,n1,I,d,maxit,tol,verbose)));
     } else if(!is.null(T[1])&&!is.null(I[1])){
         return(list(type=4,
-                    nebula=nebula.chisq.bin.train(X0,X1,T,I,d,maxit,tol,verbose)));
+                    nebula=nebula.chisq.bin.train(pi0,pi1,n0,n1,T,I,d,maxit,tol,verbose)));
     }
 }
 
-#' Nonparametric empirical Bayes classifier with latent annotations: wrapper function; predict
+#' Nonparametric empirical Bayes classifier using latent annotations: wrapper function; predict
 #'
 #' @param newX n x p matrix of additively coded genotypes to be predicted; IMPORTANT: must be coded relative to the same allele as in the cases and controls
 #' @param nebula output of nebula.chisq.train()
@@ -486,10 +489,10 @@ nebula.train <- function(X0,X1,T=NULL,I=NULL,d=25,maxit=200,tol=1e-4,verbose=FAL
 #' n1 <- 50; ## number of cases
 #' X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 #' T <- rchisq(p,1,lam); ## chi-square statistics
-#' nebula1 <- nebula.train(X0,X1,d=c(10,15));
-#' nebula2 <- nebula.train(X0,X1,T=T,d=c(10,15,20));
-#' nebula3 <- nebula.train(X0,X1,I=I,d=c(10,15));
-#' nebula4 <- nebula.train(X0,X1,T=T,I=I,d=c(10,15,20));
+#' nebula1 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,d=c(5,7));
+#' nebula2 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T=T,d=c(5,7,9));
+#' nebula3 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,I=I,d=c(5,7));
+#' nebula4 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T=T,I=I,d=c(5,7,9));
 #' ## testing data
 #' newX <- rbind(t(replicate(n0,rbinom(p,2,pi0))),
 #'               t(replicate(n1,rbinom(p,2,pi1))));

@@ -2,7 +2,7 @@
 % Please edit documentation in R/nebula.R
 \name{nebula.predict}
 \alias{nebula.predict}
-\title{Nonparametric empirical Bayes classifier with latent annotations: wrapper function; predict}
+\title{Nonparametric empirical Bayes classifier using latent annotations: wrapper function; predict}
 \usage{
 nebula.predict(newX, nebula, P = NULL, cores = 1)
 }
@@ -21,7 +21,7 @@ nebula.predict(newX, nebula, P = NULL, cores = 1)
 \item{class}{predicted class, 0=control, 1=case}
 }
 \description{
-Nonparametric empirical Bayes classifier with latent annotations: wrapper function; predict
+Nonparametric empirical Bayes classifier using latent annotations: wrapper function; predict
 }
 \examples{
 p <- 1000; ## number of snps
@@ -37,10 +37,10 @@ X0 <- t(replicate(n0,rbinom(p,2,pi0))); ## controls
 n1 <- 50; ## number of cases
 X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 T <- rchisq(p,1,lam); ## chi-square statistics
-nebula1 <- nebula.train(X0,X1,d=c(10,15));
-nebula2 <- nebula.train(X0,X1,T=T,d=c(10,15,20));
-nebula3 <- nebula.train(X0,X1,I=I,d=c(10,15));
-nebula4 <- nebula.train(X0,X1,T=T,I=I,d=c(10,15,20));
+nebula1 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,d=c(5,7));
+nebula2 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T=T,d=c(5,7,9));
+nebula3 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,I=I,d=c(5,7));
+nebula4 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T=T,I=I,d=c(5,7,9));
 ## testing data
 newX <- rbind(t(replicate(n0,rbinom(p,2,pi0))),
               t(replicate(n1,rbinom(p,2,pi1))));

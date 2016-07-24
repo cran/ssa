@@ -145,7 +145,7 @@ bi.npmle <- function(D1,D2,maxit=200,tol=1e-4,verbose=FALSE){
 #' X2 <- rnorm(p,theta2,1);
 #' X3 <- rnorm(p,theta3,1);
 #' ## set grid points
-#' d1 <- 25; d2 <- 30; d3 <- 35;
+#' d1 <- 15; d2 <- 20; d3 <- 25;
 #' Theta1 <- seq(min(X1),max(X1),length=d1);
 #' Theta2 <- seq(min(X2),max(X2),length=d2);
 #' Theta3 <- seq(min(X3),max(X3),length=d3);

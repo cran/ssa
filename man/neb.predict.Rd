@@ -35,7 +35,7 @@ n0 <- 100; ## number of controls
 X0 <- t(replicate(n0,rbinom(p,2,pi0))); ## controls
 n1 <- 50; ## number of cases
 X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
-neb <- neb.train(X0,X1);
+neb <- neb.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,d=c(20,25));
 ## testing data
 newX <- rbind(t(replicate(n0,rbinom(p,2,pi0))),
               t(replicate(n1,rbinom(p,2,pi1))));

@@ -2,7 +2,7 @@
 % Please edit documentation in R/nebula.R
 \name{nebula.chisq.bin.predict}
 \alias{nebula.chisq.bin.predict}
-\title{Nonparametric empirical Bayes classifier with latent annotations: chi-square test statistics and binary indicators; prediction}
+\title{Nonparametric empirical Bayes classifier using latent annotations: chi-square test statistics and binary indicators; prediction}
 \usage{
 nebula.chisq.bin.predict(newX, nebula, P = NULL, cores = 1)
 }
@@ -25,7 +25,7 @@ nebula.chisq.bin.predict(newX, nebula, P = NULL, cores = 1)
 \item{class}{predicted class, 0=control, 1=case}
 }
 \description{
-Nonparametric empirical Bayes classifier with latent annotations: chi-square test statistics and binary indicators; prediction
+Nonparametric empirical Bayes classifier using latent annotations: chi-square test statistics and binary indicators; prediction
 }
 \examples{
 p <- 1000; ## number of snps
@@ -41,7 +41,7 @@ X0 <- t(replicate(n0,rbinom(p,2,pi0))); ## controls
 n1 <- 50; ## number of cases
 X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 T <- rchisq(p,1,lam); ## chi-square statistics
-nebula <- nebula.chisq.bin.train(X0,X1,T,I,d=c(10,15,20));
+nebula <- nebula.chisq.bin.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T,I,d=c(10,12,14));
 ## testing data
 newX <- rbind(t(replicate(n0,rbinom(p,2,pi0))),
               t(replicate(n1,rbinom(p,2,pi1))));

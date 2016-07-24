@@ -2,12 +2,14 @@
 % Please edit documentation in R/prs.R
 \name{prs.train}
 \alias{prs.train}
-\title{Polygenic risk score; training}
+\title{Polygenic risk score (given only allele frequencies); training}
 \usage{
-prs.train(X0, X1)
+prs.train(pi0, pi1, n0, n1)
 }
 \arguments{
-\item{X0, X1}{n x p matrix of additively coded control and case genotypes, respectively; IMPORTANT: must be coded relative to the same allele in both cases and controls}
+\item{pi0, pi1}{p x 1 vectors of control and case minor allele frequencies, respectively; IMPORTANT: must be relative to the same allele in both cases and controls}
+
+\item{n0, n1}{number of controls and number of cases, respectively}
 }
 \value{
 \item{pi0}{minor allele frequencies in controls}
@@ -15,7 +17,9 @@ prs.train(X0, X1)
 \item{P}{proportion of cases}
 }
 \description{
-Equivalent to maximum likelihood naive Bayes classifier.
+Equivalent to maximum likelihood naive Bayes classifier. The discriminant function is
+\deqn{\sum_j\hat{\beta}_jX_j,}
+where \eqn{X_j} is the additively coded genotype of SNP j.
 }
 \examples{
 p <- 1000; ## number of snps
@@ -28,7 +32,7 @@ n0 <- 100; ## number of controls
 X0 <- t(replicate(n0,rbinom(p,2,pi0))); ## controls
 n1 <- 50; ## number of cases
 X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
-prs.train(X0,X1);
+prs.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1);
 
 }
 

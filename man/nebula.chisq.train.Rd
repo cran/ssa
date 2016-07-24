@@ -2,13 +2,15 @@
 % Please edit documentation in R/nebula.R
 \name{nebula.chisq.train}
 \alias{nebula.chisq.train}
-\title{Nonparametric empirical Bayes classifier with latent annotations: chi-square test statistics; training}
+\title{Nonparametric empirical Bayes classifier using latent annotations: chi-square test statistics; training}
 \usage{
-nebula.chisq.train(X0, X1, T, d = 25, maxit = 200, tol = 1e-04,
+nebula.chisq.train(pi0, pi1, n0, n1, T, d = 25, maxit = 200, tol = 1e-04,
   verbose = FALSE)
 }
 \arguments{
-\item{X0, X1}{n x p matrix of additively coded control and case genotypes, respectively; IMPORTANT: must be coded relative to the same allele in both cases and controls}
+\item{pi0, pi1}{p x 1 vectors of control and case minor allele frequencies, respectively; IMPORTANT: must be relative to the same allele in both cases and controls}
+
+\item{n0, n1}{number of controls and number of cases, respectively}
 
 \item{T}{p x 1 vector of chi-square test statistics}
 
@@ -31,7 +33,7 @@ nebula.chisq.train(X0, X1, T, d = 25, maxit = 200, tol = 1e-04,
 \item{P}{proportion of cases}
 }
 \description{
-Assumes that chi-square test statistics for each SNP are available from another study. Treats the control and case minor allele frequencies and the chi-square non-centrality parameters as random triples from a bivariate prior distribution G, and estimates the optimal Bayesian classifier given G. Nonparametric maximum likelihood is used as a plug-in estimator for G.
+Assumes that chi-square test statistics for each SNP are available from another study. Treats the true control and case minor allele frequencies and the chi-square non-centrality parameters as random triples from a bivariate prior distribution G, and estimates the optimal Bayesian classifier given G. Nonparametric maximum likelihood is used as a plug-in estimator for G.
 }
 \examples{
 p <- 1000; ## number of snps
@@ -47,7 +49,7 @@ X0 <- t(replicate(n0,rbinom(p,2,pi0))); ## controls
 n1 <- 50; ## number of cases
 X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 T <- rchisq(p,1,lam); ## chi-square statistics
-nebula <- nebula.chisq.train(X0,X1,T,d=c(20,25,30));
+nebula <- nebula.chisq.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T,d=c(20,25,30));
 par(mfrow=c(1,3));
 contour(nebula$Pi0,nebula$Pi1,apply(nebula$g,c(1,2),sum));
 points(pi0,pi1);

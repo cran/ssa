@@ -4,10 +4,13 @@
 \alias{neb.train}
 \title{Nonparametric empirical Bayes classifier without annotations; training}
 \usage{
-neb.train(X0, X1, d = 25, maxit = 200, tol = 1e-04, verbose = FALSE)
+neb.train(pi0, pi1, n0, n1, d = 25, maxit = 200, tol = 1e-04,
+  verbose = FALSE)
 }
 \arguments{
-\item{X0, X1}{n x p matrix of additively coded control and case genotypes, respectively; IMPORTANT: must be coded relative to the same allele in both cases and controls}
+\item{pi0, pi1}{p x 1 vectors of control and case minor allele frequencies, respectively; IMPORTANT: must be relative to the same allele in both cases and controls}
+
+\item{n0, n1}{number of controls and number of cases, respectively}
 
 \item{d}{if a single number, G is estimated on a d x d grid; if a two-component vector (d0,d1), G is estimated on a d0 x d1 grid}
 
@@ -40,7 +43,7 @@ n0 <- 100; ## number of controls
 X0 <- t(replicate(n0,rbinom(p,2,pi0))); ## controls
 n1 <- 50; ## number of cases
 X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
-neb <- neb.train(X0,X1,d=c(20,25));
+neb <- neb.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,d=c(20,25));
 contour(neb$Pi0,neb$Pi1,neb$g);
 points(pi0,pi1);
 
