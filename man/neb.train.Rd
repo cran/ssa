@@ -48,4 +48,3 @@ contour(neb$Pi0,neb$Pi1,neb$g);
 points(pi0,pi1);
 
 }
-

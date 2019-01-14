@@ -46,4 +46,3 @@ Yhat <- nebula.bin.predict(newX,nebula);
 mean(abs(newY-Yhat$class));
 
 }
-

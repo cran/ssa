@@ -48,4 +48,3 @@ contour(Theta1,Theta2,g);
 points(theta1,theta2);
 
 }
-

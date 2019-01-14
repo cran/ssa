@@ -42,4 +42,3 @@ plot(Theta,g/sum(g*(Theta[2]-Theta[1])),type="l");
 lines(Theta,dnorm(Theta),col="red");
 
 }
-

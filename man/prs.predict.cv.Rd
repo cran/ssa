@@ -41,4 +41,3 @@ Yhat <- prs.predict.cv(newX,prs);
 mean(abs(newY-Yhat$class));
 
 }
-

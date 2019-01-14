@@ -46,4 +46,3 @@ Yhat <- nebula.chisq.predict(newX,nebula);
 mean(abs(newY-Yhat$class));
 
 }
-

@@ -4,8 +4,8 @@
 \alias{nebula.bin.train}
 \title{Nonparametric empirical Bayes classifier using latent annotations: binary indicators; training}
 \usage{
-nebula.bin.train(pi0, pi1, n0, n1, I, d = 25, maxit = 200, tol = 1e-04,
-  verbose = FALSE)
+nebula.bin.train(pi0, pi1, n0, n1, I, d = 25, maxit = 200,
+  tol = 1e-04, verbose = FALSE)
 }
 \arguments{
 \item{pi0, pi1}{p x 1 vectors of control and case minor allele frequencies, respectively; IMPORTANT: must be relative to the same allele in both cases and controls}
@@ -52,4 +52,3 @@ contour(nebula$neb1$Pi0,nebula$neb1$Pi1,apply(nebula$neb1$g,c(1,2),sum));
 points(pi0[I==1],pi1[I==1]);
 
 }
-

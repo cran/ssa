@@ -21,8 +21,6 @@ SEXP ldd(SEXP R_U,SEXP R_Vord,SEXP R_nU,SEXP R_nV)
 
   // allow user to only take max in the lower tails of U and V
   int n = length(R_U);
-  R_nU = coerceVector(R_nU,INTSXP);
-  R_nV = coerceVector(R_nV,INTSXP);
   int nU = INTEGER(R_nU)[0];
   int nV = INTEGER(R_nV)[0];
   

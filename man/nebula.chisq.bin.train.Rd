@@ -62,4 +62,3 @@ contour(nebula$nebula1$Pi1,nebula$nebula1$Lam,apply(nebula$nebula1$g,c(2,3),sum)
 points(pi1[I==1],lam[I==1]);
 
 }
-

@@ -64,4 +64,3 @@ contour(Theta2,Theta3,apply(g,c(2,3),sum));
 points(theta2,theta3);
 
 }
-

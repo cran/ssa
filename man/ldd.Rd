@@ -49,4 +49,3 @@ out.zz <- ldd(abs(Z1),abs(Z2),p1=FALSE,p2=FALSE,perm=100);
 }
 
 }
-

@@ -44,4 +44,3 @@ Yhat <- neb.predict(newX,neb);
 mean(abs(newY-Yhat$class));
 
 }
-

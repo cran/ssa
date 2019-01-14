@@ -4,8 +4,8 @@
 \alias{nebula.chisq.train}
 \title{Nonparametric empirical Bayes classifier using latent annotations: chi-square test statistics; training}
 \usage{
-nebula.chisq.train(pi0, pi1, n0, n1, T, d = 25, maxit = 200, tol = 1e-04,
-  verbose = FALSE)
+nebula.chisq.train(pi0, pi1, n0, n1, T, d = 25, maxit = 200,
+  tol = 1e-04, verbose = FALSE)
 }
 \arguments{
 \item{pi0, pi1}{p x 1 vectors of control and case minor allele frequencies, respectively; IMPORTANT: must be relative to the same allele in both cases and controls}
@@ -59,4 +59,3 @@ contour(nebula$Pi1,nebula$Lam,apply(nebula$g,c(2,3),sum));
 points(pi1,lam);
 
 }
-

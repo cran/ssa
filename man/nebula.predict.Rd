@@ -55,4 +55,3 @@ mean(abs(newY-Yhat3$class));
 mean(abs(newY-Yhat4$class));
 
 }
-

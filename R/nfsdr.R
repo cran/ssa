@@ -1,9 +1,89 @@
-#' False simultaneous discovery rate control
+#' Nonparametric false simultaneous discovery rate control
 #'
-#' Given two sequences of paired test statistics, returns the optimal rectangular rejection that identifies the largest number of simultaneous signals while controlling the false discovery rate.
+#' Given D sequences of test statistics, returns the optimal square rejection that identifies the largest number of simultaneous signals while controlling the false discovery rate. Assumes a common threshold for each sequence.
+#'
+#' @param T n x D matrix of test statistics that are stochastically larger under the null, where n is the number of features and D is the numberof sequences of test statistics
+#' @param alpha nominal false simultaneous discovery rate
+#' @param rho regularization parameter to guarantee asymptotic control of the false discovery rate; should be a small positive value, but rho = 0 works well in most simulations
+#' @param m search for the optimal threshold up to only the mth largest unique value of T; can speed up computation
+#' @param rescale apply rank transformation to the test statistics within each sequence such that they are of comparable scales
+#'
+#' @return indices of the features delcared to be simultaneous signals
+#'
+#' @examples
+#' \donttest{
+#' ## generate paired test statistics
+#' p <- 10^6; ## total number of pairs
+#' X <- c(rep(0,p-30),rep(1,10),rep(2,10),rep(3,10));
+#' ## X=0: no signal in either sequence of tests
+#' ## X=1: signal in sequence 1 only
+#' ## X=2: signal in sequence 2 only
+#' ## X=3: simultaneous signal
+#' set.seed(1);
+#' Z1 <- rnorm(p,0,1); Z1[X==1|X==3] <- rnorm(20,3,1);
+#' Z2 <- rnorm(p,0,1); Z2[X==2|X==3] <- rnorm(20,4,1);
+#' T <- cbind(Z1^2, Z2^2);
+#' ## rejected simultaneous signals
+#' nfsdr(T, 0.05)
+#' }
+#'
+#' @import stats
+#' @importFrom utils combn
+#' @export
+
+nfsdr = function(T, alpha, rho = 0, m = 5000, rescale = TRUE) {
+
+    n = nrow(T) ## number of features
+    D = ncol(T) ## number of studies
+    
+    ## rescale test statistics to ranks
+    ## so that nulls are comparable
+    if (rescale) {
+        T = apply(T, 2, rank)
+    }
+    
+    ## there may be fewer than m or n unique Ts
+    m = min(c(m, n, length(unique(T))))
+    ts = sort(unique(T), decreasing = TRUE)[1:m]
+    ## only need to consider rows of T with rowmax >= min(ts)
+    keep = apply(T, 1, max) >= min(ts)
+    T = T[keep,]
+    
+    ## find optimal threshold
+    fdrs = rep(NA, m)
+    allpairs = combn(D, 2)
+    for (i in 1:m) {
+        R = T >= ts[i]
+        S = colSums(R) / n
+        G = sum(rowSums(R) == D) / n
+        allprods = apply(allpairs, 2, function(x) {
+            prod(S[x])
+        })
+        fdrs[i] = (sum(allprods) + rho) / max(1 / n, G)
+    }
+
+    ## return rejected features
+    if (sum(fdrs <= alpha) > 0) {
+        t_opt = min(ts[fdrs <= alpha])
+        ## return the correct indices
+        ret = which(keep)[rowSums(T >= t_opt) >= D]
+        if (length(ret) > 0) {
+            return(ret)
+        } else {
+            return(integer(0))
+        }
+    } else {
+        return(integer(0))
+    }
+    
+}
+
+#' Nonparametric false simultaneous discovery rate control, two thresholds
+#'
+#' Given two sequences of paired test statistics, returns the optimal rectangular rejection that identifies the largest number of simultaneous signals while controlling the false discovery rate. Allows different thresholds for each sequence.
 #'
 #' @param T1,T2 paired vectors of test statistics, both must be the same length; can be p-values or otherwise; if not p-values, must be stochastically larger under the null; must contain only positive values
-#' @param alpha desired false simultaneous discovery rate
+#' @param alpha nominal false simultaneous discovery rate
 #' @param m1,m2 search only up the m1th (m2th) most significant test statistic in T1 (T2); NULL to search through all statistics
 #' @param p1,p2 TRUE if T1 (T2) is a vector of p-values
 #' @param jitter NULL if no jittering is desired to resolve ties, otherwise a jitter of \code{runif(0,jitter)} will be added to all entries of T1 and T2
@@ -41,14 +121,14 @@
 #' @useDynLib ssa
 #' @export
 
-fsdr <- function(T1,T2,alpha,m1=10000,m2=10000,p1=TRUE,p2=TRUE,jitter=NULL){ 
+nfsdr2 <- function(T1,T2,alpha,m1=10000,m2=10000,p1=TRUE,p2=TRUE,jitter=NULL){ 
   if(length(T1)!=length(T2)){
     stop("Test statistic vectors must be of same length");
   }
   if(sum(c(T1,T2)<0)>0){
     stop("Test statistics must be positive");
   }
-  if(sum(is.na(T1)||is.na(T2))>0){
+  if(sum(is.na(T1)) > 0 || sum(is.na(T2)) > 0){
     stop("No missing data allowed");
   }
   if(alpha>1){
@@ -118,12 +198,12 @@ fsdr <- function(T1,T2,alpha,m1=10000,m2=10000,p1=TRUE,p2=TRUE,jitter=NULL){
   return(t);
 }
 
-#' False simultaneous discovery rate control -- report all thresholds
+#' Nonparametric false simultaneous discovery rate control, two thresholds -- report all thresholds
 #'
-#' Given two sequences of paired test statistics, returns all rectangular rejections that identify the largest number of simultaneous signals while also controlling the false discovery rate.
+#' Given two sequences of paired test statistics, returns all rectangular rejections that identify the largest number of simultaneous signals while also controlling the false discovery rate. Allows different thresholds for each sequence.
 #'
 #' @param T1,T2 paired vectors of test statistics, both must be the same length; must be stochastically larger under the alternative than under the null; must contain only positive values
-#' @param alpha desired false simultaneous discovery rate
+#' @param alpha nominal false simultaneous discovery rate
 #' @param m1,m2 search only up the m1th (m2th) most significant test statistic in T1 (T2)
 #'
 #' @return k x 2 matrix, where k is the number of rectangular regions found; the first column is the threshold for T1 and the second column is for T2
@@ -152,7 +232,7 @@ fsdr <- function(T1,T2,alpha,m1=10000,m2=10000,p1=TRUE,p2=TRUE,jitter=NULL){
 #' @useDynLib ssa
 #' @export
 
-fsdr_all<- function(T1,T2,alpha,m1=5000,m2=5000){
+nfsdr2_all<- function(T1,T2,alpha,m1=5000,m2=5000){
   if(length(T1)!=length(T2)){
     stop("Test statistic vectors must be of same length");
   }

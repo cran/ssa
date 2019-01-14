@@ -4,8 +4,8 @@
 \alias{nebula.train}
 \title{Nonparametric empirical Bayes classifier using latent annotations: wrapper function; training}
 \usage{
-nebula.train(pi0, pi1, n0, n1, T = NULL, I = NULL, d = 25, maxit = 200,
-  tol = 1e-04, verbose = FALSE)
+nebula.train(pi0, pi1, n0, n1, T = NULL, I = NULL, d = 25,
+  maxit = 200, tol = 1e-04, verbose = FALSE)
 }
 \arguments{
 \item{pi0, pi1}{p x 1 vectors of control and case minor allele frequencies, respectively; IMPORTANT: must be relative to the same allele in both cases and controls}
@@ -51,4 +51,3 @@ nebula3 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,I=I,d=c(10,15));
 nebula4 <- nebula.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1,T=T,I=I,d=c(10,15,20));
 
 }
-

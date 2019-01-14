@@ -43,4 +43,3 @@ X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 prs.train.cv(X0,X1,K=3,w=1,nlambda=100,verbose=TRUE);
 
 }
-

@@ -30,4 +30,3 @@ Z2 <- rnorm(p,0,1); Z2[X==2|X==3] <- rnorm(20,4,1);
 maxtest(abs(Z1),abs(Z2));
 
 }
-

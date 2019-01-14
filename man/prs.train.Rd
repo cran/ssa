@@ -35,4 +35,3 @@ X1 <- t(replicate(n1,rbinom(p,2,pi1))); ## cases
 prs.train(colMeans(X0)/2,colMeans(X1)/2,n0,n1);
 
 }
-
